@@ -3,6 +3,7 @@ interface StudentInterface {
   firstName: string;
   lastName: string;
   middleName: string;
+  groupId: number;
   isDeleted?: boolean;
 };
 

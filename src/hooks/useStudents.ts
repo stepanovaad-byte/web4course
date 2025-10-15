@@ -3,13 +3,15 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
-import { deleteStudentApi, getStudentsApi } from '@/api/studentsApi';
+import { createStudentApi, deleteStudentApi, getStudentsApi } from '@/api/studentsApi';
 import type StudentInterface from '@/types/StudentInterface';
 import isServer from '@/utils/isServer';
 
 interface StudentsHookInterface {
   students: StudentInterface[];
   deleteStudentMutate: (studentId: number) => void;
+  createStudentMutate: (student: Omit<StudentInterface, 'id'>) => void;
+  isCreating: boolean;
 }
 
 const useStudents = (): StudentsHookInterface => {
@@ -19,6 +21,20 @@ const useStudents = (): StudentsHookInterface => {
     queryKey: ['students'],
     queryFn: () => getStudentsApi(),
     enabled: false,
+  });
+
+  /**
+   * Мутация создания студента
+   */
+  const createStudentMutation = useMutation({
+    mutationFn: async (student: Omit<StudentInterface, 'id'>) => createStudentApi(student),
+    onSuccess: (newStudent: StudentInterface) => {
+
+      queryClient.setQueryData<StudentInterface[]>(['students'], (oldStudents = []) => [
+        ...oldStudents,
+        newStudent
+      ]);
+    },
   });
 
   /**
@@ -72,6 +88,8 @@ const useStudents = (): StudentsHookInterface => {
   return {
     students: data ?? [],
     deleteStudentMutate: deleteStudentMutate.mutate,
+    createStudentMutate: createStudentMutation.mutate,
+    isCreating: createStudentMutation.isPending,
   };
 };
 
